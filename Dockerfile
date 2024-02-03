@@ -1,12 +1,15 @@
-FROM node:21.6-alpine
+FROM node:21-alpine
 
 WORKDIR /app
 
-COPY package.json /app
+COPY package.json .
 
-RUN npm install
+RUN yarn
 
-COPY . /app
+COPY . .
 
-CMD ["yarn", "start"]
+EXPOSE 8000
+
+CMD ["yarn", "build"]
+
 
