@@ -1,11 +1,11 @@
 import "./App.css";
-import { Button } from "@chakra-ui/react";
+import IncreaseButton from "./components/buttons/Increase";
 function App() {
   return (
     <>
       <div>
         <p>Hello World</p>
-        <Button colorScheme="blackAlpha">BlackAlpha</Button>
+        <IncreaseButton />
       </div>
     </>
   );

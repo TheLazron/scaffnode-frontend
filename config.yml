@@ -1,0 +1,104 @@
+version: 2.1
+
+jobs:
+  build-image:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Install Docker
+          command: |
+            sudo apt-get update
+            sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+            sudo systemctl start docker
+      - run:
+          name: Build Docker image
+          command: |
+            docker build -t temp-image -f Dockerfile.dev .
+            mkdir -p ~/docker-image
+            docker save temp-image -o ~/docker-image/temp-image.tar
+            ls -lh ~/docker-image
+      - run:
+          name: Verify persisted image
+          command: |
+            ls -lh ~/docker-image
+      - persist_to_workspace:
+          root: ~/docker-image
+          paths:
+            - temp-image.tar
+
+  run-image:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: ~/docker-image
+      - run:
+          name: List workspace directory
+          command: |
+            cd ~/docker-image
+            ls -al
+      - run:
+          name: Load Docker image
+          command: |
+            docker load -i ~/docker-image/temp-image.tar
+            docker images
+      - run:
+          name: Run Docker container
+          command: |
+            docker run temp-image npm run test -- --coverage
+
+  merge-branch:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Merge feature with master branch
+          command: |
+            git fetch origin master
+            git checkout master
+            git config --global user.email "${GIT_USER_MAIL}"
+            git config --global user.name "${GIT_USER_NAME}"
+            git merge -v -m "merzing" feat
+
+  push-image:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Building production image
+          command: docker build -t p1 .
+      - run:
+          name: Log in to Azure Container Registry
+          command: docker login circleregistry.azurecr.io -u $AZURE_USERNAME -p $AZURE_PASS
+      # - run:
+      #     name: Load Docker image from workspace
+      #     command: docker load -i ~/docker-image/temp-image.tar
+      - run:
+          name: Tag Docker image
+          command: docker tag p1 circleregistry.azurecr.io/prodwork
+      - run:
+          name: Push Docker image to Azure Container Registry
+          command: docker push circleregistry.azurecr.io/prodwork
+
+workflows:
+  version: 2
+  build-and-run:
+    jobs:
+      - build-image:
+          filters:
+            branches:
+              only:
+                - feat
+      - run-image:
+          requires:
+            - build-image
+      - merge-branch:
+          requires:
+            - run-image
+      - push-image:
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - merge-branch
