@@ -7,7 +7,7 @@ workflows:
   build-publish-and-notify:
     jobs:
       - docker/publish:
-          image: lazron/scaffnode:latest
+          image: lazron/scaffnode
       - notify:
           context: slack-secrets
           requires:
