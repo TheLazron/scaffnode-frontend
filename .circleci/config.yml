@@ -18,19 +18,6 @@ jobs:
       - image: cimg/base:stable
     steps:
       - slack/notify:
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "plain_text",
-                      "text": "*Latest build has been successfully pushed*",
-                      "emoji": true
-                    }
-                  ]
-                }
-              ]
-            }
+          template: success_tagged_deploy_1
+          mentions: '@channel'
           event: pass
