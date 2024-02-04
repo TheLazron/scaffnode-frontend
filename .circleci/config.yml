@@ -4,7 +4,33 @@ orbs:
   docker: circleci/docker@2.5.0
   slack: circleci/slack@4.12.6
 workflows:
-  build-and-publish-docker-image:
+  build-publish-and-notify:
     jobs:
       - docker/publish:
-          image: lazron/scaffnode
+          image: lazron/scaffnode:latest
+      - notify:
+          context: slack-secrets
+          requires:
+            - docker/publish
+jobs:
+  notify:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - slack/notify:
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "plain_text",
+                      "text": "*Latest build has been successfully pushed*",
+                      "emoji": true
+                    }
+                  ]
+                }
+              ]
+            }
+          event: pass
