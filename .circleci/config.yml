@@ -31,7 +31,7 @@ jobs:
   test:
     executor:
       name: node/default
-      tag: "16"
+      tag: "21-alpine"
     steps:
       - checkout
       - node/install-packages:
