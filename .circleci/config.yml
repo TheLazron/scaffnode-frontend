@@ -6,7 +6,10 @@ orbs:
 workflows:
   test-build-publish-and-notify:
     jobs:
-      - test
+      - test:
+          filters:
+            branches:
+              only: main
       - docker/publish:
           image: lazron/scaffnode
           requires:
